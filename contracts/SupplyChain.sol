@@ -37,16 +37,18 @@ contract SupplyChain {
     State state;
     address seller;
     address buyer;
-
   }
+
+  function () public payable {
+    }
 
   /* Create 4 events with the same name as each possible State (see above)
     Each event should accept one argument, the sku*/
 
-    event ForSale (uint _sku);
-    event Sold (uint _sku);
-    event Shipped (uint _sku);
-    event Received (uint _sku);
+    event ForSale (uint sku);
+    event Sold (uint sku);
+    event Shipped (uint sku);
+    event Received (uint sku);
 
 /* Create a modifer that checks if the msg.sender is the owner of the contract */
 
@@ -84,40 +86,49 @@ contract SupplyChain {
     skuCount = skuCount + 1;
   }
 
-  /* Add a keyword so the function can be paid. This function should transfer money
-    to the seller, set the buyer as the person who called this transaction, and set the state
-    to Sold. Be careful, this function should use 3 modifiers to check if the item is for sale,
-    if the buyer paid enough, and check the value after the function is called to make sure the buyer is
-    refunded any excess ether sent. Remember to call the event associated with this function!*/
+  /* Add a keyword so the function can be paid. 
+    This function should transfer money to the seller, 
+    set the buyer as the person who called this transaction, 
+    and set the state to Sold. 
+
+    Be careful, this function should use 3 modifiers to check if the item is for sale,
+    if the buyer paid enough, and 
+    check the value after the function is called to make sure the buyer is refunded any excess ether sent. 
+    Remember to call the event associated with this function!*/
 
   function buyItem(uint sku) public
   payable 
   forSale(sku) 
-  paidEnough(sku) 
   paidEnough(items[sku].price) 
   checkValue(sku)
   {
-    emit Sold(sku);
     items[sku].seller.transfer(items[sku].price);
     items[sku].buyer = msg.sender;
     items[sku].state = State.Sold;
+    emit Sold(sku);
   }
 
 
   /* Add 2 modifiers to check if the item is sold already, and that the person calling this function
   is the seller. Change the state of the item to shipped. Remember to call the event associated with this function!*/
   function shipItem(uint sku)
-    public
-  {}
+    public sold(sku) verifyCaller(items[sku].seller)
+    {
+        items[sku].state = State.Shipped;
+        emit Shipped(sku);
+    }
 
   /* Add 2 modifiers to check if the item is shipped already, and that the person calling this function
   is the buyer. Change the state of the item to received. Remember to call the event associated with this function!*/
   function receiveItem(uint sku)
-    public
-  {}
+    public shipped(sku) verifyCaller(items[sku].buyer)
+  {
+    emit Received(sku);
+    items[sku].state = State.Received;
+  }
 
   /* We have these functions completed so we can run tests, just ignore it :) */
-  function fetchItem(uint _sku) public view returns (string name, uint sku, uint price, uint state, address seller, address buyer) {
+  function fetchItem(uint _sku) public constant returns (string name, uint sku, uint price, uint state, address seller, address buyer) {
     name = items[_sku].name;
     sku = items[_sku].sku;
     price = items[_sku].price;

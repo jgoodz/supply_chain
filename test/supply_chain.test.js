@@ -10,7 +10,8 @@ contract('SupplyChain', function(accounts) {
     var sku
     const price = web3.toWei(1, "ether")
 
-    it.only("should add an item with the provided name and price", async() => {
+    //it.only("should add an item with the provided name and price", async() => {
+    it("should add an item with the provided name and price", async() => {
         const supplyChain = await SupplyChain.deployed()
 
         var eventEmitted = false
